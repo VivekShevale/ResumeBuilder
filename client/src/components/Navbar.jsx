@@ -22,7 +22,7 @@ function Navbar() {
             <Layers2 className="w-4 h-4 text-white" />
           </div>
           <span className="text-lg font-semibold tracking-tight bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-            ResumeBuilder
+            Rezumi ✦
           </span>
         </Link>
 

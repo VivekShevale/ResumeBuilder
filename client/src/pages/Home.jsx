@@ -135,7 +135,7 @@ function Home() {
                 <Layers2 className="w-4 h-4 text-white" />
               </div>
               <span className="text-lg font-semibold tracking-tight bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                ResumeBuilder
+                Rezumi ✦
               </span>
             </Link>
 
@@ -183,7 +183,7 @@ function Home() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4" />
-              <span>AI-Powered Resume Builder</span>
+              <span>Hey, Guys</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-slate-900 mb-6 leading-tight">
               Create a professional resume that 
@@ -360,7 +360,7 @@ function Home() {
                   <FileText className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-lg font-semibold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                  ResumeBuilder
+                  Resumio
                 </span>
               </Link>
               <p className="text-sm text-slate-600 max-w-xs">
@@ -388,7 +388,7 @@ function Home() {
           </div>
           
           <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <p>© 2026 ResumeBuilder. All rights reserved.</p>
+            <p>© 2026 Rezumi ✦. All rights reserved.</p>
             <div className="flex items-center gap-6">
               <a href="#" className="hover:text-slate-900 transition-colors">Terms</a>
               <a href="#" className="hover:text-slate-900 transition-colors">Privacy</a>

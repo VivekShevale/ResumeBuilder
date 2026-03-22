@@ -35,7 +35,7 @@ function PersonalInfoForm({data, onChange, removeBackground, setRemoveBackground
                     <input type="file" accept='image/jpeg, image/png' className='hidden' onChange={(e)=>handleChange("image", e.target.files[0])}/>
                 </label>
                 
-                {typeof data.image === 'object' && (
+                {/* {typeof data.image === 'object' && (
                     <div className='flex flex-col gap-1 pl-4 text-sm'>
                         <p>Remove Background</p>
                         <label className='relative inline-flex items-center cursor-pointer text-gray-900 gap-3'>
@@ -45,7 +45,7 @@ function PersonalInfoForm({data, onChange, removeBackground, setRemoveBackground
                             <span className='dot absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-4'></span>
                         </label>
                     </div>
-                )}
+                )} */}
             </div>
             
 
