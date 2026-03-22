@@ -1,21 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
-import { dummyResumeData } from "../assets/assets";
 import {
-  ArrowLeftIcon,
-  Briefcase,
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  DownloadIcon,
-  EyeIcon,
-  EyeOffIcon,
+  Download,
+  Eye,
+  EyeOff,
   FileText,
-  FolderIcon,
+  Briefcase,
   GraduationCap,
-  Share2Icon,
+  FolderGit2,
   Sparkles,
   User,
+  ZoomIn,
+  ZoomOut,
+  Share2,
+  Save,
+  CheckCircle2,
+  RotateCcw,
+  Loader2,
 } from "lucide-react";
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import api from "../configs/api";
 import PersonalInfoForm from "../components/PersonalInfoForm";
 import ResumePreview from "../components/ResumePreview";
 import TemplateSelector from "../components/TemplateSelector";
@@ -25,14 +33,12 @@ import ExperienceForm from "../components/ExperienceForm";
 import EducationForm from "../components/EducationForm";
 import ProjectForm from "../components/ProjectForm";
 import SkillsForm from "../components/SkillsForm";
-import { useSelector } from "react-redux";
-import toast from "react-hot-toast";
-import api from "../configs/api";
 
 function ResumeBuilder() {
   const { resumeId } = useParams();
   const { token } = useSelector((state) => state.auth);
 
+  // Resume data state - SAME AS ORIGINAL
   const [resumeData, setResumeData] = useState({
     _id: "",
     title: "",
@@ -47,6 +53,61 @@ function ResumeBuilder() {
     public: false,
   });
 
+  // UI state
+  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+  const [removeBackground, setRemoveBackground] = useState(false);
+  const [fontSize, setFontSize] = useState(100);
+  const [isSaving, setIsSaving] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(420);
+  const [isResizing, setIsResizing] = useState(false);
+
+  const MIN_FONT = 70;
+  const MAX_FONT = 120;
+  const FONT_STEP = 5;
+  const MIN_SIDEBAR_WIDTH = 320;
+  const MAX_SIDEBAR_WIDTH = 600;
+
+  // Section definitions with descriptions
+  const sections = [
+    { 
+      id: "personal", 
+      name: "Personal Info", 
+      icon: User,
+      description: "Name, contact, and professional photo"
+    },
+    { 
+      id: "summary", 
+      name: "Professional Summary", 
+      icon: FileText,
+      description: "Brief overview of your expertise"
+    },
+    { 
+      id: "experience", 
+      name: "Work Experience", 
+      icon: Briefcase,
+      description: "Your employment history"
+    },
+    { 
+      id: "education", 
+      name: "Education", 
+      icon: GraduationCap,
+      description: "Academic background and qualifications"
+    },
+    { 
+      id: "projects", 
+      name: "Projects", 
+      icon: FolderGit2,
+      description: "Notable projects and achievements"
+    },
+    { 
+      id: "skills", 
+      name: "Skills", 
+      icon: Sparkles,
+      description: "Technical and soft skills"
+    },
+  ];
+
+  // Load existing resume - SAME AS ORIGINAL
   const loadExistingResume = async () => {
     try {
       const { data } = await api.get("/api/resumes/get/" + resumeId, {
@@ -54,31 +115,48 @@ function ResumeBuilder() {
       });
       if (data.resume) {
         setResumeData(data.resume);
-        document.title = data.resume.title;
+        document.title = `${data.resume.title} | Resume Builder`;
       }
     } catch (error) {
       console.log(error.message);
     }
   };
 
-  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
-  const [removeBackground, setRemoveBackground] = useState(false);
-
-  const sections = [
-    { id: "personal", name: "Personal Info", icon: User },
-    { id: "summary", name: "Summary", icon: FileText },
-    { id: "experience", name: "Experience", icon: Briefcase },
-    { id: "education", name: "Education", icon: GraduationCap },
-    { id: "projects", name: "Projects", icon: FolderIcon },
-    { id: "skills", name: "Skills", icon: Sparkles },
-  ];
-
-  const activeSection = sections[activeSectionIndex];
-
   useEffect(() => {
     loadExistingResume();
+  }, [resumeId]);
+
+  // Resizing logic for sidebar
+  const handleMouseDown = useCallback((e) => {
+    setIsResizing(true);
+    e.preventDefault();
   }, []);
 
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+      const newWidth = e.clientX;
+      if (newWidth >= MIN_SIDEBAR_WIDTH && newWidth <= MAX_SIDEBAR_WIDTH) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // Visibility toggle - SAME AS ORIGINAL
   const changeResumeVisibility = async () => {
     try {
       const formData = new FormData();
@@ -98,6 +176,7 @@ function ResumeBuilder() {
     }
   };
 
+  // Share functionality - SAME AS ORIGINAL
   const handleShare = () => {
     const frontendUrl = window.location.href.split("/app/")[0];
     const resumeUrl = frontendUrl + "/view/" + resumeId;
@@ -109,15 +188,17 @@ function ResumeBuilder() {
     }
   };
 
+  // Download Resume - SAME AS ORIGINAL (window.print)
   const downloadResume = () => {
     window.print();
   };
 
+  // Save resume - SAME AS ORIGINAL
   const saveResume = async () => {
+    setIsSaving(true);
     try {
       let updatedResumeData = structuredClone(resumeData);
 
-      // remove image from updatedResumeData
       if (typeof resumeData.personal_info.image === "object") {
         delete updatedResumeData.personal_info.image;
       }
@@ -138,88 +219,219 @@ function ResumeBuilder() {
     } catch (error) {
       console.error("Error saving resume: ", error);
     }
+    setIsSaving(false);
   };
 
+  const activeSection = sections[activeSectionIndex];
+  const progress = ((activeSectionIndex + 1) / sections.length) * 100;
+
   return (
-    <div>
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <Link
-          to={"/app"}
-          className="inline-flex gap-2 items-center text-slate-500 hover:text-slate-700 transition-all"
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Top Navigation Bar - NEW DESIGN */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          {/* Left: Back & Title */}
+          <div className="flex items-center gap-4">
+            <Link
+              to="/app"
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors p-2 -ml-2 rounded-lg hover:bg-slate-100"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="hidden sm:inline font-medium">Dashboard</span>
+            </Link>
+            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+            <div className="hidden sm:block">
+              <h1 className="font-semibold text-slate-900 truncate max-w-xs">
+                {resumeData.title || "Untitled Resume"}
+              </h1>
+            </div>
+          </div>
+
+          {/* Center: Progress Stepper (Desktop) */}
+          <div className="hidden lg:flex items-center gap-1">
+            {sections.map((section, idx) => {
+              const Icon = section.icon;
+              const isActive = idx === activeSectionIndex;
+              const isCompleted = idx < activeSectionIndex;
+              
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSectionIndex(idx)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    isActive 
+                      ? "bg-rose-50 text-rose-700 ring-1 ring-rose-200" 
+                      : isCompleted
+                      ? "text-slate-600 hover:bg-slate-50"
+                      : "text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                    isCompleted 
+                      ? "bg-green-500 text-white" 
+                      : isActive 
+                      ? "bg-rose-600 text-white" 
+                      : "bg-slate-200 text-slate-500"
+                  }`}>
+                    {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
+                  </div>
+                  <span className="hidden xl:inline">{section.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2">
+            {/* Visibility Toggle */}
+            <button
+              onClick={changeResumeVisibility}
+              className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                resumeData.public 
+                  ? "bg-green-50 text-green-700 hover:bg-green-100" 
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {resumeData.public ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {resumeData.public ? "Public" : "Private"}
+            </button>
+
+            {/* Share */}
+            {resumeData.public && (
+              <button
+                onClick={handleShare}
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </button>
+            )}
+
+            {/* Save */}
+            <button
+              onClick={saveResume}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white text-sm font-medium rounded-lg hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm shadow-rose-500/20"
+            >
+              {isSaving ? (
+                <RotateCcw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">{isSaving ? "Saving..." : "Save"}</span>
+            </button>
+
+            {/* Download - SAME FUNCTIONALITY (window.print) */}
+            <button
+              onClick={downloadResume}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-all shadow-sm shadow-green-500/20"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Progress Bar */}
+        <div className="lg:hidden h-1 bg-slate-100">
+          <div 
+            className="h-full bg-rose-600 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </header>
+
+      {/* Main Content Area - NEW DESIGN */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Form Panel */}
+        <div 
+          className="flex flex-col bg-white border-r border-slate-200 relative"
+          style={{ width: `${sidebarWidth}px`, minWidth: `${MIN_SIDEBAR_WIDTH}px`, maxWidth: `${MAX_SIDEBAR_WIDTH}px` }}
         >
-          <ArrowLeftIcon className="size-4" /> Back to Dashboard
-        </Link>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 pb-8">
-        <div className="grid lg:grid-cols-12 gap-8">
-          {/* Left Panel - Form */}
-          <div className="relative lg:col-span-5 rounded-lg overflow-hidden">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 pt-1">
-              {/* Progress Bar */}
-              <hr className="absolute top-0 left-0 right-0 border-2 border-gray-200" />
-              <hr
-                className="absolute top-0 left-0 h-1 bg-gradient-to-r from-green-500 to-green-600 border-none transition-all duration-1000"
-                style={{
-                  width: `${
-                    (activeSectionIndex * 100) / (sections.length - 1)
-                  }%`,
-                }}
+          {/* Floating Toolbar */}
+          <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200 p-4 space-y-3">
+            {/* Template & Color Controls */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <TemplateSelector
+                  selectedTemplate={resumeData.template}
+                  onChange={(template) =>
+                    setResumeData((prev) => ({ ...prev, template }))
+                  }
+                />
+              </div>
+              <ColorPicker
+                selectedColor={resumeData.accent_color}
+                onChange={(color) =>
+                  setResumeData((prev) => ({ ...prev, accent_color: color }))
+                }
               />
+            </div>
 
-              {/* Section Navigation */}
-              <div className="flex justify-between items-center mb-6 border-b border-gray-300 py-1">
-                <div className="flex items-center gap-2">
-                  <TemplateSelector
-                    selectedTemplate={resumeData.template}
-                    onChange={(template) =>
-                      setResumeData((prev) => ({ ...prev, template }))
-                    }
-                  />
-                  <ColorPicker
-                    selectedColor={resumeData.accent_color}
-                    onChange={(color) =>
-                      setResumeData((prev) => ({
-                        ...prev,
-                        accent_color: color,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center">
-                  {activeSectionIndex !== 0 && (
-                    <button
-                      onClick={() =>
-                        setActiveSectionIndex((prevIndex) =>
-                          Math.max(prevIndex - 1, 0)
-                        )
-                      }
-                      className="flex items-center gap-1 p-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
-                      disabled={activeSectionIndex === 0}
-                    >
-                      <ChevronLeft className="size-4" /> Previous
-                    </button>
-                  )}
+            {/* Font Size Control */}
+            {/* <div className="flex items-center justify-between bg-slate-50 rounded-lg p-2 border border-slate-200">
+              <div className="flex items-center gap-2 text-slate-600">
+                <span className="text-xs font-medium">Zoom</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setFontSize(f => Math.max(f - FONT_STEP, MIN_FONT))}
+                  disabled={fontSize <= MIN_FONT}
+                  className="p-1.5 hover:bg-white rounded-md disabled:opacity-30 transition-all shadow-sm"
+                >
+                  <ZoomOut className="w-4 h-4 text-slate-600" />
+                </button>
+                <span className="text-xs font-medium text-slate-700 w-10 text-center tabular-nums">
+                  {fontSize}%
+                </span>
+                <button
+                  onClick={() => setFontSize(f => Math.min(f + FONT_STEP, MAX_FONT))}
+                  disabled={fontSize >= MAX_FONT}
+                  className="p-1.5 hover:bg-white rounded-md disabled:opacity-30 transition-all shadow-sm"
+                >
+                  <ZoomIn className="w-4 h-4 text-slate-600" />
+                </button>
+              </div>
+            </div> */}
 
-                  <button
-                    onClick={() =>
-                      setActiveSectionIndex((prevIndex) =>
-                        Math.min(prevIndex + 1, sections.length - 1)
-                      )
-                    }
-                    className={`flex items-center gap-1 p-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all ${
-                      activeSectionIndex === sections.length - 1 && "opacity-50"
-                    }`}
-                    disabled={activeSectionIndex === sections.length - 1}
-                  >
-                    Next
-                    <ChevronRight className="size-4" />
-                  </button>
+            {/* Section Navigation (Mobile/Tablet) */}
+            <div className="lg:hidden">
+              <select
+                value={activeSectionIndex}
+                onChange={(e) => setActiveSectionIndex(Number(e.target.value))}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              >
+                {sections.map((section, idx) => (
+                  <option key={section.id} value={idx}>
+                    {idx + 1}. {section.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Form Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-lg mx-auto space-y-6">
+              {/* Section Header */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center">
+                    <activeSection.icon className="w-5 h-5 text-rose-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      {activeSection.name}
+                    </h2>
+                    <p className="text-sm text-slate-500">
+                      {activeSection.description}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* Form Content */}
-              <div className="space-y-6">
+              {/* Dynamic Form Component - SAME AS ORIGINAL */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                 {activeSection.id === "personal" && (
                   <PersonalInfoForm
                     data={resumeData.personal_info}
@@ -279,58 +491,56 @@ function ResumeBuilder() {
                 )}
               </div>
 
-              <button
-                onClick={() =>
-                  toast.promise(saveResume, {
-                    loading: "Saving...",
-                    success: "Resume saved!",
-                    error: "Failed to save resume",
-                  })
-                }
-                className="bg-gradient-to-br from-green-100 to-green-200 ring-green-300 text-green-600 ring hover:ring-green-400 transition-all rounded-md px-6 py-2 mt-6 text-sm"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-
-          {/* Right Panel - Preview  */}
-          <div className="lg:col-span-7 max-lg:mt-6">
-            <div className="relative w-full">
-              <div className="absolute bottom-3 left-0 right-0 flex items-center justify-end gap-2">
-                {resumeData.public && (
-                  <button
-                    onClick={handleShare}
-                    className="flex items-center p-2 px-4 gap-2 text-xs bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600 rounded-lg ring-blue-300 hover:ring transition-colors"
-                  >
-                    <Share2Icon className="size-4" /> Share
-                  </button>
-                )}
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between pt-4">
                 <button
-                  onClick={changeResumeVisibility}
-                  className="flex items-center p-2 px-4 gap-2 text-xs bg-gradient-to-br from-purple-100 to-purple-200 text-purple-600 ring-purple-300 rounded-lg hover:ring transition-colors"
+                  onClick={() => setActiveSectionIndex(prev => Math.max(prev - 1, 0))}
+                  disabled={activeSectionIndex === 0}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  {resumeData.public ? (
-                    <EyeIcon className="size-4" />
-                  ) : (
-                    <EyeOffIcon className="size-4" />
-                  )}
-                  {resumeData.public ? "Public" : "Private"}
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
                 </button>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">
+                    {activeSectionIndex + 1} of {sections.length}
+                  </span>
+                </div>
+
                 <button
-                  onClick={downloadResume}
-                  className="flex items-center gap-2 p-2 px-6 py-2 text-xs bg-gradient-to-br from-green-100 to-green-200 text-green-600 rounded-lg ring-green-300 hover:ring transition-colors"
+                  onClick={() => setActiveSectionIndex(prev => Math.min(prev + 1, sections.length - 1))}
+                  disabled={activeSectionIndex === sections.length - 1}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                 >
-                  <DownloadIcon className="size-4" /> Download
+                  Next
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
+          </div>
 
-            <ResumePreview
-              data={resumeData}
-              template={resumeData.template}
-              accentColor={resumeData.accent_color}
-            />
+          {/* Resize Handle */}
+          <div
+            onMouseDown={handleMouseDown}
+            className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-rose-500 transition-colors z-20 ${
+              isResizing ? "bg-rose-500" : "bg-transparent"
+            }`}
+          />
+        </div>
+
+        {/* Right Panel - Preview */}
+        <div className="flex-1 bg-slate-100/50 overflow-auto p-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Resume Preview Component */}
+            <div className="bg-white shadow-2xl rounded-lg">
+              <ResumePreview
+                data={resumeData}
+                template={resumeData.template}
+                accentColor={resumeData.accent_color}
+                fontSize={fontSize}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -19,12 +19,37 @@ function TemplateSelector({selectedTemplate, onChange}) {
         {
             id: "minimal-image",
             name: "Minimal Image",
-            preview: "Minimal design with a single image and clean typography"
+            preview: "Minimal design with a profile image and clean sidebar layout"
         },
         {
             id: "minimal",
             name: "Minimal",
             preview: "Ultra-clean design that puts your content front and center"
+        },
+        {
+            id: "executive",
+            name: "Executive",
+            preview: "Prestigious dark sidebar layout — ideal for senior & leadership roles"
+        },
+        {
+            id: "harvard",
+            name: "Harvard",
+            preview: "ATS-friendly academic style with clear hierarchy and bullet-driven content"
+        },
+        // {
+        //     id: "creative",
+        //     name: "Creative",
+        //     preview: "Bold editorial style with a color accent band — stands out in creative fields"
+        // },
+        // {
+        //     id: "infographic",
+        //     name: "Infographic",
+        //     preview: "Visual layout with skill dots, timeline dots, and card-style projects"
+        // },
+        {
+            id: "timeline",
+            name: "Timeline",
+            preview: "Chronological story told along a vertical spine — elegant and readable"
         }
     ]
     
