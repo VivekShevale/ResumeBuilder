@@ -26,11 +26,11 @@ function TemplateSelector({selectedTemplate, onChange}) {
             name: "Minimal",
             preview: "Ultra-clean design that puts your content front and center"
         },
-        {
-            id: "executive",
-            name: "Executive",
-            preview: "Prestigious dark sidebar layout — ideal for senior & leadership roles"
-        },
+        // {
+        //     id: "executive",
+        //     name: "Executive",
+        //     preview: "Prestigious dark sidebar layout — ideal for senior & leadership roles"
+        // },
         {
             id: "harvard",
             name: "Harvard",
